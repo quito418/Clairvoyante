@@ -31,10 +31,12 @@ def GetTensor( tensor_fn, num ):
     rows = np.empty((num, ((2*param.flankingBaseNum+1)*4*param.matrixNum)), dtype=np.float32)
     pos = []
     for row in fo: # A variant per row
+        row = row.decode('UTF-8') 
         try:
             chrom, coord, seq, rows[c] = UnpackATensorRecord(*(row.split()))
         except ValueError:
-            print >> sys.stderr, "UnpackATensorRecord Failure", row
+            #print >> sys.stderr, "UnpackATensorRecord Failure", row
+            print ( "UnpackATensorRecord Failure", row, file=sys.stderr)
         seq = seq.upper()
         if seq[param.flankingBaseNum] not in ["A","C","G","T"]: # TODO: Support IUPAC in the future
             continue
@@ -44,7 +46,9 @@ def GetTensor( tensor_fn, num ):
         if c == num:
             x = np.reshape(rows, (num,2*param.flankingBaseNum+1,4,param.matrixNum))
             for i in range(1, param.matrixNum): x[:,:,:,i] -= x[:,:,:,0]
-            total += c; print >> sys.stderr, "Processed %d tensors" % total
+            total += c
+            #print >> sys.stderr, "Processed %d tensors" % total
+            print("Processed %d tensors" % total, file = sys.stderr)
             yield 0, c, x, pos
             c = 0
             rows = np.empty((num, ((2*param.flankingBaseNum+1)*4*param.matrixNum)), dtype=np.float32)
@@ -55,7 +59,9 @@ def GetTensor( tensor_fn, num ):
         f.wait()
     x = np.reshape(rows[:c], (c,2*param.flankingBaseNum+1,4,param.matrixNum))
     for i in range(1, param.matrixNum): x[:,:,:,i] -= x[:,:,:,0]
-    total += c; print >> sys.stderr, "Processed %d tensors" % total
+    total += c;
+    #print >> sys.stderr, "Processed %d tensors" % total
+    print("Processed %d tensors" % total, file =sys.stderr)
     yield 1, c, x, pos
 
 
@@ -64,6 +70,7 @@ def GetTrainingArray( tensor_fn, var_fn, bed_fn, shuffle = True ):
     if bed_fn != None:
         f = subprocess.Popen(shlex.split("gzip -fdc %s" % (bed_fn) ), stdout=subprocess.PIPE, bufsize=8388608)
         for row in f.stdout:
+            row = row.decode('UTF-8')
             row = row.split()
             name = row[0]
             if name not in tree:
@@ -79,11 +86,12 @@ def GetTrainingArray( tensor_fn, var_fn, bed_fn, shuffle = True ):
     if var_fn != None:
         f = subprocess.Popen(shlex.split("gzip -fdc %s" % (var_fn) ), stdout=subprocess.PIPE, bufsize=8388608)
         for row in f.stdout:
+            row = row.decode('UTF-8')
             row = row.split()
             ctgName = row[0]
             pos = int(row[1])
             if bed_fn != None:
-                if len(tree[ctgName].search(pos)) == 0:
+                if len(tree[ctgName].at(pos)) == 0:
                     continue
             key = ctgName + ":" + str(pos)
 
@@ -125,10 +133,11 @@ def GetTrainingArray( tensor_fn, var_fn, bed_fn, shuffle = True ):
     total = 0
     mat = np.empty(((2*param.flankingBaseNum+1)*4*param.matrixNum), dtype=np.float32)
     for row in f.stdout:
+        row = row.decode('UTF-8')
         chrom, coord, seq, mat = UnpackATensorRecord(*(row.split()))
         if bed_fn != None:
             if chrom not in tree: continue
-            if len(tree[chrom].search(int(coord))) == 0: continue
+            if len(tree[chrom].at(int(coord))) == 0: continue
         seq = seq.upper()
         if seq[param.flankingBaseNum] not in ["A","C","G","T"]: continue
         key = chrom + ":" + coord
@@ -148,7 +157,7 @@ def GetTrainingArray( tensor_fn, var_fn, bed_fn, shuffle = True ):
             Y[key] = baseVec
 
         total += 1
-        if total % 100000 == 0: print >> sys.stderr, "Processed %d tensors" % total
+        if total % 100000 == 0: print ( "Processed %d tensors" % total, file=sys.stderr) #print >> sys.stderr, "Processed %d tensors" % total
     f.stdout.close()
     f.wait()
 

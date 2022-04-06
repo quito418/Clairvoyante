@@ -111,6 +111,7 @@ def OutputAlnTensor(args):
         p1 = subprocess.Popen(shlex.split("%s faidx %s %s" % (args.samtools, args.ref_fn, args.ctgName) ), stdout=subprocess.PIPE, bufsize=8388608)
 
     for row in p1.stdout:
+        row = row.decode('UTF-8')
         if rowCount == 0:
             refName = row.rstrip().lstrip(">")
         else:
@@ -147,6 +148,9 @@ def OutputAlnTensor(args):
 
     previousPos = 0; depthCap = 0
     for l in p2.stdout:
+        # youngmok
+        l = l.decode('UTF-8')
+        
         l = l.split()
         if l[0][0] == "@":
             continue
@@ -186,7 +190,7 @@ def OutputAlnTensor(args):
             if m.group(2) == "S":
                 queryPos += advance
             if m.group(2) in ("M", "=", "X"):
-                for i in xrange(advance):
+                for i in range(advance):
                     if refPos in beginToEnd:
                         for rEnd, rCenter in beginToEnd[refPos]:
                             if rCenter in activeSet:
@@ -216,7 +220,7 @@ def OutputAlnTensor(args):
                     queryAdv += 1
 
             elif m.group(2) == "D":
-                for i in xrange(advance):
+                for i in range(advance):
                     for center in list(activeSet):
                         if availableSlots != 0:
                             availableSlots -= 1
@@ -235,7 +239,8 @@ def OutputAlnTensor(args):
                     refPos += 1
 
         if depthCap == 0:
-            for center in centerToAln.keys():
+            tmpp = [key for key in centerToAln.keys()]
+            for center in tmpp:
                 if center + (param.flankingBaseNum+1) < POS:
                     l =  GenerateTensor(args, args.ctgName, centerToAln[center], center, refSeq)
                     if l != None:

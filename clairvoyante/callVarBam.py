@@ -97,7 +97,7 @@ def Run(args):
     maxCpus = multiprocessing.cpu_count()
     if args.threads == None: numCpus = multiprocessing.cpu_count()
     else: numCpus = args.threads if args.threads < multiprocessing.cpu_count() else multiprocessing.cpu_count()
-    cpuSet = ",".join(str(x) for x in random.sample(xrange(0, maxCpus), numCpus))
+    cpuSet = ",".join(str(x) for x in random.sample(range(0, maxCpus), numCpus))
     taskSet = "taskset -c %s" % cpuSet
     try:
         subprocess.check_output("which %s" % ("taskset"), shell=True)
@@ -106,7 +106,7 @@ def Run(args):
 
     if args.delay > 0:
         delay = random.randrange(0, args.delay)
-        print >> sys.stderr, "Delay %d seconds before starting variant calling ..." % (delay)
+        sys.stderr.write("Delay %d seconds before starting variant calling ..." % (delay))
         time.sleep(delay)
 
     try:

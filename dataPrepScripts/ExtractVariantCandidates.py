@@ -28,6 +28,7 @@ def OutputCandidate(ctgName, pos, baseCount, refBase, minCoverage, threshold):
     denominator = totalCount
     if denominator == 0:
         denominator = 1
+    baseCount = [key for key in baseCount]    
     baseCount.sort(key = lambda x:-x[1]) # sort baseCount descendingly
     p0 = float(baseCount[0][1]) / denominator
     p1 = float(baseCount[1][1]) / denominator
@@ -56,7 +57,8 @@ def MakeCandidates( args ):
         args.outputProb = (args.candidates * 2.) / (args.genomeSize)
 
     if os.path.isfile("%s.fai" % (args.ref_fn)) == False:
-        print >> sys.stderr, "Fasta index %s.fai doesn't exist." % (args.ref_fn)
+        #print >> sys.stderr, "Fasta index %s.fai doesn't exist." % (args.ref_fn)
+        print( "Fasta index %s.fai doesn't exist." % (args.ref_fn), file=sys.stderr)
         sys.exit(1)
 
     args.refStart = None; args.refEnd = None; refSeq = []; refName = None; rowCount = 0
@@ -71,7 +73,9 @@ def MakeCandidates( args ):
         args.ctgStart = args.ctgEnd = None
         p1 = subprocess.Popen(shlex.split("%s faidx %s %s" % (args.samtools, args.ref_fn, args.ctgName) ), stdout=subprocess.PIPE, bufsize=8388608)
     for row in p1.stdout:
+        row = row.decode('UTF-8')
         if rowCount == 0:
+            #refName = row.rstrip().lstrip(">")
             refName = row.rstrip().lstrip(">")
         else:
             refSeq.append(row.rstrip())
@@ -82,13 +86,14 @@ def MakeCandidates( args ):
     p1.wait()
 
     if p1.returncode != 0 or len(refSeq) == 0:
-        print >> sys.stderr, "Failed to load reference seqeunce."
+        print( "Failed to load reference seqeunce.", file=sys.stderr)
         sys.exit(1)
 
     tree = {}
     if args.bed_fn != None:
         f = subprocess.Popen(shlex.split("gzip -fdc %s" % (args.bed_fn) ), stdout=subprocess.PIPE, bufsize=8388608)
         for row in f.stdout:
+            row = row .decode('UTF-8')
             row = row.strip().split()
             name = row[0]
             if name not in tree:
@@ -100,7 +105,7 @@ def MakeCandidates( args ):
         f.stdout.close()
         f.wait()
         if args.ctgName not in tree:
-            print >> sys.stderr, "ctgName is not in the bed file, are you using the correct bed file (%s)?" % (args.bed_fn)
+            sys.stderr.write( "ctgName is not in the bed file, are you using the correct bed file (%s)?" % (args.bed_fn))
             sys.exit(1)
 
     pileup = {}
@@ -122,6 +127,7 @@ def MakeCandidates( args ):
 
     processedReads = 0
     for l in p2.stdout:
+        l = l.decode('UTF-8')
         l = l.strip().split()
         if l[0][0] == "@":
             continue
@@ -189,12 +195,14 @@ def MakeCandidates( args ):
             if args.ctgStart != None and args.ctgEnd != None:
                 if sweep >= args.ctgStart and sweep <= args.ctgEnd:
                     if args.bed_fn != None:
-                        if args.ctgName in tree and len(tree[args.ctgName].search(sweep)) != 0:
+                        #print(sweep)
+                        if args.ctgName in tree and len(tree[args.ctgName].at(sweep)) != 0:
                             outputFlag = 1
                     else:
                         outputFlag = 1
             elif args.bed_fn != None:
-                if args.ctgName in tree and len(tree[args.ctgName].search(sweep)) != 0:
+                #print(sweep, file=sys.stderr)
+                if args.ctgName in tree and len(tree[args.ctgName].at(sweep)) != 0:
                     outputFlag = 1
             else:
                 outputFlag = 1
@@ -212,8 +220,10 @@ def MakeCandidates( args ):
             sweep += 1;
 
     # check remaining bases
-    remainder = pileup.keys()
+    remainder = [key for key in pileup.keys()]
     remainder.sort()
+    #remainder.sort(key= lambda x: x)
+    
     for pos in remainder:
         baseCount = pileup[pos].items()
         refBase = refSeq[pos - (0 if args.refStart == None else (args.refStart - 1))]
@@ -222,12 +232,12 @@ def MakeCandidates( args ):
         if args.ctgStart != None and args.ctgEnd != None:
             if pos >= args.ctgStart and pos <= args.ctgEnd:
                 if args.bed_fn != None:
-                    if args.ctgName in tree and len(tree[args.ctgName].search(pos)) != 0:
+                    if args.ctgName in tree and len(tree[args.ctgName].at(pos)) != 0:
                         outputFlag = 1
                 else:
                     outputFlag = 1
         elif args.bed_fn != None:
-            if args.ctgName in tree and len(tree[args.ctgName].search(pos)) != 0:
+            if args.ctgName in tree and len(tree[args.ctgName].at(pos)) != 0:
                 outputFlag = 1
         else:
             outputFlag = 1
@@ -250,7 +260,9 @@ def MakeCandidates( args ):
         can_fpo.close()
 
     if processedReads == 0:
-        print >> sys.stderr, "No read has been process, either the genome region you specified has no read cover, or please check the correctness of your BAM input (%s)." % (args.bam_fn)
+        
+        #print >> sys.stderr, "No read has been process, either the genome region you specified has no read cover, or please check the correctness of your BAM input (%s)." % (args.bam_fn)
+        print("No read has been process, either the genome region you specified has no read cover, or please check the correctness of your BAM input (%s)." % (args.bam_fn), file=sys.stderr)
         sys.exit(0)
 
 

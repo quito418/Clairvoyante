@@ -150,21 +150,35 @@ def Output(args, call_fh, num, XBatch, posBatch, base, z, t, l):
                 elif varZygosity == 0: gtStr = "0/1"
                 elif varZygosity == 1: gtStr = "1/1"
 
-                print >> call_fh, "%s\t%d\t.\t%s\t%s\t%d\t%s\t%s\tGT:GQ:DP:AF\t%s:%d:%d:%.4f" % (chromosome, coordination, refBase, altBase, qual, filt, infoStr, gtStr, qual, dp, af)
+                #print >> call_fh, "%s\t%d\t.\t%s\t%s\t%d\t%s\t%s\tGT:GQ:DP:AF\t%s:%d:%d:%.4f" % (chromosome, coordination, refBase, altBase, qual, filt, infoStr, gtStr, qual, dp, af)
+                print("%s\t%d\t.\t%s\t%s\t%d\t%s\t%s\tGT:GQ:DP:AF\t%s:%d:%d:%.4f" % (chromosome, coordination, refBase, altBase, qual, filt, infoStr, gtStr, qual, dp, af), file=call_fh)
 
 
 def PrintVCFHeader(args, call_fh):
-    print >> call_fh, '##fileformat=VCFv4.1'
-    print >> call_fh, '##FILTER=<ID=PASS,Description="All filters passed">'
-    print >> call_fh, '##FILTER=<ID=LowQual,Description="Confidence in this variant being real is below calling threshold.">'
-    print >> call_fh, '##ALT=<ID=DEL,Description="Deletion">'
-    print >> call_fh, '##ALT=<ID=INS,Description="Insertion of novel sequence">'
-    print >> call_fh, '##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">'
-    print >> call_fh, '##INFO=<ID=LENGUESS,Number=.,Type=Integer,Description="Best guess of the indel length">'
-    print >> call_fh, '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">'
-    print >> call_fh, '##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">'
-    print >> call_fh, '##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">'
-    print >> call_fh, '##FORMAT=<ID=AF,Number=1,Type=Float,Description="Estimated allele frequency in the range (0,1)">'
+    
+    #print >> call_fh, '##fileformat=VCFv4.1'
+    print('##fileformat=VCFv4.1', file=call_fh)
+    
+    #print >> call_fh, '##FILTER=<ID=PASS,Description="All filters passed">'
+    print('##FILTER=<ID=PASS,Description="All filters passed">', file=call_fh)
+    #print >> call_fh, '##FILTER=<ID=LowQual,Description="Confidence in this variant being real is below calling threshold.">'
+    print('##FILTER=<ID=LowQual,Description="Confidence in this variant being real is below calling threshold.">', file=call_fh)
+    #print >> call_fh, '##ALT=<ID=DEL,Description="Deletion">'
+    print('##ALT=<ID=DEL,Description="Deletion">', file=call_fh)
+    #print >> call_fh, '##ALT=<ID=INS,Description="Insertion of novel sequence">'
+    print('##ALT=<ID=INS,Description="Insertion of novel sequence">', file=call_fh)
+    #print >> call_fh, '##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">'
+    print('##INFO=<ID=SVTYPE,Number=1,Type=String,Description="Type of structural variant">', file=call_fh)
+    #print >> call_fh, '##INFO=<ID=LENGUESS,Number=.,Type=Integer,Description="Best guess of the indel length">'
+    print('##INFO=<ID=LENGUESS,Number=.,Type=Integer,Description="Best guess of the indel length">', file=call_fh)
+    #print >> call_fh, '##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">'
+    print('##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">', file=call_fh)
+    #print >> call_fh, '##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">'
+    print('##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">', file=call_fh)
+    #print >> call_fh, '##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">'
+    print('##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">', file=call_fh)
+    #print >> call_fh, '##FORMAT=<ID=AF,Number=1,Type=Float,Description="Estimated allele frequency in the range (0,1)">'
+    print('##FORMAT=<ID=AF,Number=1,Type=Float,Description="Estimated allele frequency in the range (0,1)">', file=call_fh)
 
     if args.ref_fn != None:
       fai_fn = args.ref_fn + ".fai"
@@ -173,9 +187,10 @@ def PrintVCFHeader(args, call_fh):
           fields = line.strip().split("\t")
           chromName = fields[0]
           chromLength = int(fields[1])
-          print >> call_fh, "##contig=<ID=%s,length=%d>" % (chromName, chromLength)
+          #print >> call_fh, "##contig=<ID=%s,length=%d>" % (chromName, chromLength)
+          print("##contig=<ID=%s,length=%d>" % (chromName, chromLength) , file = call_fh)
 
-    print >> call_fh, '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s' % (args.sampleName)
+    print( '#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\tFORMAT\t%s' % (args.sampleName), file=call_fh)
 
 def Test(args, m, utils):
     call_fh = open(args.call_fn, "w")
