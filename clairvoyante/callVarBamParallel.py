@@ -6,8 +6,11 @@ import shlex
 import argparse
 import param
 
-majorContigs = {"chr"+str(a) for a in range(0,23)+["X", "Y"]}.union({str(a) for a in range(0,23)+["X", "Y"]})
-
+# majorContigs = {"chr"+str(a) for a in range(0,23)+["X", "Y"]}.union({str(a) for a in range(0,23)+["X", "Y"]})
+majorContigs = ["chr"+str(a) for a in range(0,23)]
+majorContigs.extend( [str(a) for a in range(0,23)] )
+majorContigs.extend( ["chrX", "chrY"] )
+majorContigs.extend( ["X", "Y"] )
 def CheckFileExist(fn, sfx=""):
     if not os.path.isfile(fn+sfx):
         sys.exit("Error: %s not found" % (fn+sfx))
@@ -52,6 +55,7 @@ def Run(args):
     if bed_fn != None:
         bed_fp = subprocess.Popen(shlex.split("gzip -fdc %s" % (bed_fn) ), stdout=subprocess.PIPE, bufsize=8388608)
         for row in bed_fp.stdout:
+            row = row.decode('utf-8')
             row = row.strip().split()
             name = row[0]
             if name not in tree:
@@ -65,7 +69,7 @@ def Run(args):
 
     fai_fp = open(fai_fn)
     for line in fai_fp:
-
+        # line = line.decode('utf-8')
         fields = line.strip().split("\t")
 
         chromName = fields[0]
@@ -82,7 +86,8 @@ def Run(args):
             output_fn = "%s.%s_%d_%d.vcf" % (output_prefix, chromName, regionStart, end)
             if bed_fn != None:
                 if chromName in tree:
-                    if len(tree[chromName].search(start, end)) != 0:
+                    # if len(tree[chromName].search(start, end)) != 0:
+                    if len(tree[chromName].overlap(start, end)) != 0:
                         print("python %s --chkpnt_fn %s --ref_fn %s --bam_fn %s --bed_fn %s --ctgName %s --ctgStart %d --ctgEnd %d --call_fn %s --threshold %f --minCoverage %f --pypy %s --samtools %s --delay %d --threads %d --sampleName %s %s %s %s" % (callVarBamBin, chkpnt_fn, ref_fn, bam_fn, bed_fn, chromName, regionStart, end, output_fn, threshold, minCoverage, pypyBin, samtoolsBin, delay, threads, sampleName, vcf_fn, considerleftedge, qual) )
             else:
                 print("python %s --chkpnt_fn %s --ref_fn %s --bam_fn %s --ctgName %s --ctgStart %d --ctgEnd %d --call_fn %s --threshold %f --minCoverage %f --pypy %s --samtools %s --delay %d --threads %d --sampleName %s %s %s %s" % (callVarBamBin, chkpnt_fn, ref_fn, bam_fn, chromName, regionStart, end, output_fn, threshold, minCoverage, pypyBin, samtoolsBin, delay, threads, sampleName, vcf_fn, considerleftedge, qual) )
@@ -138,7 +143,7 @@ def main():
     parser.add_argument('--samtools', type=str, default="samtools",
             help="Path to the 'samtools', default: %(default)s")
 
-    parser.add_argument('--pypy', type=str, default="pypy",
+    parser.add_argument('--pypy', type=str, default="/data/pypy3.6-v7.3.2-linux64/bin/pypy3",
             help="Path to the 'pypy', default: %(default)s")
 
     parser.add_argument('--delay', type=int, default = 10,

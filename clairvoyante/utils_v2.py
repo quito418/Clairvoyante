@@ -31,7 +31,8 @@ def GetTensor( tensor_fn, num ):
     rows = np.empty((num, ((2*param.flankingBaseNum+1)*4*param.matrixNum)), dtype=np.float32)
     pos = []
     for row in fo: # A variant per row
-        row = row.decode('UTF-8') 
+        if type(row) != str:
+            row = row.decode('UTF-8') 
         try:
             chrom, coord, seq, rows[c] = UnpackATensorRecord(*(row.split()))
         except ValueError:
@@ -70,7 +71,8 @@ def GetTrainingArray( tensor_fn, var_fn, bed_fn, shuffle = True ):
     if bed_fn != None:
         f = subprocess.Popen(shlex.split("gzip -fdc %s" % (bed_fn) ), stdout=subprocess.PIPE, bufsize=8388608)
         for row in f.stdout:
-            row = row.decode('UTF-8')
+            if type(row) != str:
+                row = row.decode('UTF-8')
             row = row.split()
             name = row[0]
             if name not in tree:
@@ -86,7 +88,8 @@ def GetTrainingArray( tensor_fn, var_fn, bed_fn, shuffle = True ):
     if var_fn != None:
         f = subprocess.Popen(shlex.split("gzip -fdc %s" % (var_fn) ), stdout=subprocess.PIPE, bufsize=8388608)
         for row in f.stdout:
-            row = row.decode('UTF-8')
+            if type(row) != str:
+                row = row.decode('UTF-8')
             row = row.split()
             ctgName = row[0]
             pos = int(row[1])
@@ -133,7 +136,8 @@ def GetTrainingArray( tensor_fn, var_fn, bed_fn, shuffle = True ):
     total = 0
     mat = np.empty(((2*param.flankingBaseNum+1)*4*param.matrixNum), dtype=np.float32)
     for row in f.stdout:
-        row = row.decode('UTF-8')
+        if type(row) != str:
+            row = row.decode('UTF-8')
         chrom, coord, seq, mat = UnpackATensorRecord(*(row.split()))
         if bed_fn != None:
             if chrom not in tree: continue

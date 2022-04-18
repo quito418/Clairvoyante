@@ -50,6 +50,7 @@ def OutputVariant( args ):
     if tabixed == 0:
         vcf_fp = subprocess.Popen(shlex.split("gzip -fdc %s" % (vcf_fn) ), stdout=subprocess.PIPE, bufsize=8388608)
     for row in vcf_fp.stdout:
+        row = row.decode('UTF-8')
         row = row.strip().split()
         if row[0][0] == "#":
             continue
@@ -75,6 +76,10 @@ def OutputVariant( args ):
                     shortestLen = len(i)
                     shortestGT = i
             row[4] = shortestGT
+            # does this happen
+            # print(p1,p2,row, gts)
+            # import time
+            # time.sleep(5)
         var_fp.stdin.write(" ".join([row[0], row[1], row[3], row[4], str(p1), str(p2)]))
         var_fp.stdin.write("\n")
     vcf_fp.stdout.close()

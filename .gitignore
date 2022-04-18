@@ -6,6 +6,18 @@ __pycache__/
 # C extensions
 *.so
 
+# ELse 
+*.vcf
+*.tar
+*.png
+*.PNG
+*~
+trainedModels/
+core
+data/
+training/
+testingData/
+
 # Distribution / packaging
 .Python
 env/
